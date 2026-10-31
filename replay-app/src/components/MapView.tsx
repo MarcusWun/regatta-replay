@@ -1,5 +1,8 @@
 // MapLibre basemap + deck.gl overlay rendering the fleet, trails, course, start line.
 //
+// GeoJSON is inlined via `?raw` import, parsed at module load, passed directly as
+// `data` to avoid Tauri asset-protocol issues in production.
+//
 // Layout:
 //   - MapLibre: offline Natural Earth style — one `land` + one `ocean` fill layer.
 //   - deck.gl MapboxOverlay (interleaved mode works with MapLibre):
@@ -15,8 +18,11 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import landGeojson from '../assets/basemap/ne_10m_land.geojson?url';
-import oceanGeojson from '../assets/basemap/ne_10m_ocean.geojson?url';
+import landRaw from '../assets/basemap/ne_10m_land.geojson?raw';
+import oceanRaw from '../assets/basemap/ne_10m_ocean.geojson?raw';
+
+const landData  = JSON.parse(landRaw);
+const oceanData = JSON.parse(oceanRaw);
 import { colorForMmsi, OWN_BOAT_COLOR } from '../lib/colors';
 import { interpolateCurrent, marksBbox, startLineEndpoints } from '../lib/geo';
 import type { PositionRow, RaceMarkRow, VesselRow } from '../lib/types';
@@ -36,8 +42,8 @@ const BASEMAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   name: 'regatta-replay-neutral',
   sources: {
-    ocean: { type: 'geojson', data: oceanGeojson },
-    land: { type: 'geojson', data: landGeojson },
+    ocean: { type: 'geojson', data: oceanData },
+    land:  { type: 'geojson', data: landData  },
   },
   layers: [
     { id: 'ocean-fill', type: 'background', paint: { 'background-color': '#b0c7d6' } },
