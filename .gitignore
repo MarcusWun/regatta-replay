@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Tauri / Rust
+replay-app/src-tauri/target/
+replay-app/src-tauri/gen/
+replay-app/src-tauri/Cargo.lock.user
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Local-only envs
+.env
+.env.local
+*.log
+
+# Mapshaper intermediates (we commit the final simplified geojson)
+*.geojson.tmp
