@@ -18,8 +18,11 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import mapLibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import landRaw from '../assets/basemap/ne_10m_land.geojson?raw';
 import oceanRaw from '../assets/basemap/ne_10m_ocean.geojson?raw';
+
+maplibregl.setWorkerUrl(mapLibreWorkerUrl);
 
 const landData  = JSON.parse(landRaw);
 const oceanData = JSON.parse(oceanRaw);
