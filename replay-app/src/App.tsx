@@ -9,6 +9,7 @@ import { BoatSelector } from './components/analytics/BoatSelector';
 import { MarkRoundingTableCard } from './components/analytics/MarkRoundingTable';
 import { DistanceToLeaderBar } from './components/analytics/DistanceToLeaderBar';
 import { SOGChart } from './components/analytics/SOGChart';
+import { FleetVMCChart } from './components/analytics/FleetVMCChart';
 import { OwnBoatPerformance } from './components/analytics/OwnBoatPerformance';
 import { ReplaySettings } from './components/Settings/ReplaySettings';
 import { useRaceData } from './hooks/useRaceData';
@@ -18,6 +19,7 @@ import { useMarkRoundings } from './hooks/useMarkRoundings';
 import { useDistanceToLeader } from './hooks/useDistanceToLeader';
 import { usePolarPerformance } from './hooks/usePolarPerformance';
 import { useVMC } from './hooks/useVMC';
+import { useFleetVMC } from './hooks/useFleetVMC';
 import { readSettings } from './lib/settings';
 import { parsePolar, type ParsedPolar } from './lib/polar-engine/pol-parser';
 import { readTextFile } from '@tauri-apps/plugin-fs';
@@ -183,6 +185,7 @@ function ReadyApp({
     parsedPolar?.table ?? null,
   );
   const vmc = useVMC(ownTrack, race.marks, roundings, ownMmsi, clock.nowMs);
+  const fleetVmc = useFleetVMC(positionsByMmsi, race.marks, roundings);
 
   const toggleHidden = (mmsi: string) => {
     setHidden((prev) => {
@@ -269,6 +272,15 @@ function ReadyApp({
           />
           <SOGChart
             positionsByMmsi={positionsByMmsi}
+            vessels={race.vessels}
+            ownMmsi={ownMmsi}
+            hidden={hidden}
+            startMs={startMs}
+            endMs={endMs}
+            nowMs={clock.nowMs}
+          />
+          <FleetVMCChart
+            fleetVmc={fleetVmc}
             vessels={race.vessels}
             ownMmsi={ownMmsi}
             hidden={hidden}
