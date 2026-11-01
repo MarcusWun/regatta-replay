@@ -48,6 +48,21 @@ export function rhumbLineCoords(marks: RaceMarkRow[]): [number, number][] {
 }
 
 /**
+ * Great-circle initial bearing from `from` to `to`, in degrees true [0, 360).
+ * Over a 10-min window on a Sun Fast 3300 (~1 nm travel), initial-bearing
+ * drift vs midpoint bearing is well under 0.5° so recomputing per-fix is fine.
+ */
+export function initialBearing(from: LatLon, to: LatLon): number {
+  const phi1 = toRadians(from.lat);
+  const phi2 = toRadians(to.lat);
+  const dLambda = toRadians(to.lon - from.lon);
+  const y = Math.sin(dLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
+  const theta = Math.atan2(y, x);
+  return (toDegrees(theta) + 360) % 360;
+}
+
+/**
  * Local-tangent-plane projection around an anchor point. Returns metres from
  * the anchor; good to <0.1 % over tens of km. The inverse transform rebuilds
  * (lat,lon) within rounding error.

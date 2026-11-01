@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   detectFirstCrossing,
   haversineMeters,
+  initialBearing,
   interpolateCurrent,
   marksBbox,
   rhumbLineCoords,
@@ -30,6 +31,26 @@ describe('rhumbLineCoords', () => {
       [-70.6, 41.5],
       [-70.5, 41.6],
     ]);
+  });
+});
+
+describe('initialBearing', () => {
+  it('returns 0° for a due-north leg', () => {
+    expect(initialBearing({ lat: 41.5, lon: -70.6 }, { lat: 41.6, lon: -70.6 })).toBeCloseTo(0, 2);
+  });
+
+  it('returns 90° for a due-east leg', () => {
+    const b = initialBearing({ lat: 41.5, lon: -70.6 }, { lat: 41.5, lon: -70.5 });
+    expect(b).toBeCloseTo(90, 1);
+  });
+
+  it('returns 180° for a due-south leg', () => {
+    expect(initialBearing({ lat: 41.5, lon: -70.6 }, { lat: 41.4, lon: -70.6 })).toBeCloseTo(180, 2);
+  });
+
+  it('returns a value in [0, 360) for a due-west leg', () => {
+    const b = initialBearing({ lat: 41.5, lon: -70.5 }, { lat: 41.5, lon: -70.6 });
+    expect(b).toBeCloseTo(270, 1);
   });
 });
 
