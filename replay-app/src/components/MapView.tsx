@@ -21,11 +21,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import mapLibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import landRaw from '../assets/basemap/ne_10m_land.geojson?raw';
 import oceanRaw from '../assets/basemap/ne_10m_ocean.geojson?raw';
+import osmUsNeLandRaw from '../assets/basemap/osm_us_ne_land.geojson?raw';
 
 maplibregl.setWorkerUrl(mapLibreWorkerUrl);
 
-const landData  = JSON.parse(landRaw);
-const oceanData = JSON.parse(oceanRaw);
+const landData       = JSON.parse(landRaw);
+const oceanData      = JSON.parse(oceanRaw);
+const osmUsNeLandData = JSON.parse(osmUsNeLandRaw);
 import { colorForMmsi, OWN_BOAT_COLOR } from '../lib/colors';
 import { interpolateCurrent, marksBbox, startLineEndpoints } from '../lib/geo';
 import type { PositionRow, RaceMarkRow, VesselRow } from '../lib/types';
@@ -45,13 +47,15 @@ const BASEMAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   name: 'regatta-replay-neutral',
   sources: {
-    ocean: { type: 'geojson', data: oceanData },
-    land:  { type: 'geojson', data: landData  },
+    ocean:       { type: 'geojson', data: oceanData },
+    land:        { type: 'geojson', data: landData },
+    'land-us-ne': { type: 'geojson', data: osmUsNeLandData },
   },
   layers: [
     { id: 'ocean-fill', type: 'background', paint: { 'background-color': '#b0c7d6' } },
     { id: 'ocean-poly', type: 'fill', source: 'ocean', paint: { 'fill-color': '#b0c7d6' } },
     { id: 'land-poly', type: 'fill', source: 'land', paint: { 'fill-color': '#d9d4c9' } },
+    { id: 'land-poly-us-ne', type: 'fill', source: 'land-us-ne', paint: { 'fill-color': '#d9d4c9' } },
   ],
   // No glyphs server — the style has zero text layers, so a loader isn't needed.
 };
