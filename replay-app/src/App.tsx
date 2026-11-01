@@ -17,6 +17,7 @@ import { useStartDetection } from './hooks/useStartDetection';
 import { useMarkRoundings } from './hooks/useMarkRoundings';
 import { useDistanceToLeader } from './hooks/useDistanceToLeader';
 import { usePolarPerformance } from './hooks/usePolarPerformance';
+import { useVMC } from './hooks/useVMC';
 import { readSettings } from './lib/settings';
 import { parsePolar, type ParsedPolar } from './lib/polar-engine/pol-parser';
 import { readTextFile } from '@tauri-apps/plugin-fs';
@@ -181,6 +182,7 @@ function ReadyApp({
     race.wind,
     parsedPolar?.table ?? null,
   );
+  const vmc = useVMC(ownTrack, race.marks, roundings, ownMmsi, clock.nowMs);
 
   const toggleHidden = (mmsi: string) => {
     setHidden((prev) => {
@@ -280,6 +282,8 @@ function ReadyApp({
               nowMs={clock.nowMs}
               windMissing={windMissing}
               polarMissing={polarMissing}
+              vmcSnapshot={vmc.snapshot}
+              vmcWindow={vmc.window}
             />
           )}
         </AnalyticsPanel>
