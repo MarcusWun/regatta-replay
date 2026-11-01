@@ -10,6 +10,7 @@ export interface AnalyticsPanelProps {
   open: boolean;
   onToggle: () => void;
   onOpenSettings: () => void;
+  onOpenExport: () => void;
   children: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function AnalyticsPanel({
   open,
   onToggle,
   onOpenSettings,
+  onOpenExport,
   children,
 }: AnalyticsPanelProps) {
   if (!open) {
@@ -42,6 +44,14 @@ export function AnalyticsPanel({
       <header className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-sky-300">Analytics</h2>
         <div className="flex items-center gap-1">
+          <button
+            onClick={onOpenExport}
+            title="Export race data"
+            data-testid="analytics-export"
+            className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-100 hover:bg-slate-700"
+          >
+            Export…
+          </button>
           <button
             onClick={onOpenSettings}
             title="Settings"
