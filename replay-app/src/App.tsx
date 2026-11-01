@@ -1,6 +1,7 @@
 // Top-level app shell: file picker on empty, map + timeline + analytics
 // panel on ready.
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type * as maplibregl from 'maplibre-gl';
 import { FilePicker } from './components/FilePicker';
 import { MapView } from './components/MapView';
 import { Timeline } from './components/Timeline';
@@ -11,6 +12,7 @@ import { DistanceToLeaderBar } from './components/analytics/DistanceToLeaderBar'
 import { SOGChart } from './components/analytics/SOGChart';
 import { FleetVMCChart } from './components/analytics/FleetVMCChart';
 import { OwnBoatPerformance } from './components/analytics/OwnBoatPerformance';
+import { ExportDialog } from './components/analytics/ExportDialog';
 import { ReplaySettings } from './components/Settings/ReplaySettings';
 import { useRaceData } from './hooks/useRaceData';
 import { defaultSpeedForDuration, useReplayClock } from './hooks/useReplayClock';
@@ -23,6 +25,9 @@ import { useFleetVMC } from './hooks/useFleetVMC';
 import { readSettings } from './lib/settings';
 import { parsePolar, type ParsedPolar } from './lib/polar-engine/pol-parser';
 import { readTextFile } from '@tauri-apps/plugin-fs';
+import { nearestWind } from './lib/wind';
+import type { OwnBoatMetricsEntry } from './lib/export/csv';
+import type { BatchExportBoat } from './lib/export/batch';
 import type { PositionRow } from './lib/types';
 import './App.css';
 
@@ -58,6 +63,7 @@ export default function App() {
   const [trailSeconds, setTrailSeconds] = useState<number | null>(15 * 60);
   const [panelOpen, setPanelOpen] = useState<boolean>(readPanelOpen);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [polarPath, setPolarPath] = useState<string | null>(null);
   const [parsedPolar, setParsedPolar] = useState<ParsedPolar | null>(null);
 
@@ -117,6 +123,8 @@ export default function App() {
       setPanelOpen={setPanelOpen}
       settingsOpen={settingsOpen}
       setSettingsOpen={setSettingsOpen}
+      exportOpen={exportOpen}
+      setExportOpen={setExportOpen}
       polarPath={polarPath}
       parsedPolar={parsedPolar}
       onPolarChange={(path, parsed) => {
@@ -137,6 +145,8 @@ interface ReadyAppProps {
   setPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
   settingsOpen: boolean;
   setSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  exportOpen: boolean;
+  setExportOpen: React.Dispatch<React.SetStateAction<boolean>>;
   polarPath: string | null;
   parsedPolar: ParsedPolar | null;
   onPolarChange: (path: string | null, parsed: ParsedPolar | null) => void;
@@ -152,6 +162,8 @@ function ReadyApp({
   setPanelOpen,
   settingsOpen,
   setSettingsOpen,
+  exportOpen,
+  setExportOpen,
   polarPath,
   parsedPolar,
   onPolarChange,
@@ -186,6 +198,71 @@ function ReadyApp({
   );
   const vmc = useVMC(ownTrack, race.marks, roundings, ownMmsi, clock.nowMs);
   const fleetVmc = useFleetVMC(positionsByMmsi, race.marks, roundings);
+
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const handleMapReady = useCallback((map: maplibregl.Map) => {
+    mapRef.current = map;
+  }, []);
+  const [exportToast, setExportToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!exportToast) return;
+    const id = window.setTimeout(() => setExportToast(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [exportToast]);
+
+  const ownBoatMetrics = useMemo<Map<string, OwnBoatMetricsEntry>>(() => {
+    const map = new Map<string, OwnBoatMetricsEntry>();
+    if (!ownMmsi) return map;
+    // ownTrack is already sorted ascending (groupByMmsi sorts). performanceSeries and
+    // vmc.series.entries are produced from the same sorted own-boat positions, so we
+    // can index both by position row and overlay the raw wind row via nearestWind.
+    for (let i = 0; i < ownTrack.length; i += 1) {
+      const p = ownTrack[i];
+      const tMs = Date.parse(p.timestamp_utc);
+      const perf = performanceSeries.entries[i];
+      const vmcEntry = vmc.series.entries[i];
+      const wrow = nearestWind(race.wind, tMs);
+      map.set(p.timestamp_utc, {
+        tws: wrow?.tws ?? perf?.tws ?? null,
+        twd: wrow?.twd ?? null,
+        aws: wrow?.aws ?? null,
+        awa: wrow?.awa ?? null,
+        twa: perf?.twa ?? null,
+        vmg: perf?.vmg ?? null,
+        polarPct: perf?.percent ?? null,
+        vmc: vmcEntry?.vmc ?? null,
+      });
+    }
+    return map;
+  }, [ownTrack, ownMmsi, performanceSeries, vmc.series, race.wind]);
+
+  const getExportBoat = useCallback(
+    (mmsi: string): BatchExportBoat => {
+      const vessel =
+        race.vessels.find((v) => v.mmsi === mmsi) ??
+        ({
+          mmsi,
+          ais_name: null,
+          display_name: null,
+          sail_number: null,
+          class: null,
+          call_sign: null,
+          vessel_type: null,
+          excluded: null,
+          added_post_race: null,
+        } as const);
+      const positions = positionsByMmsi.get(mmsi) ?? [];
+      const isOwn = mmsi === ownMmsi;
+      return {
+        vessel,
+        positions,
+        ownBoatMetrics: isOwn ? ownBoatMetrics : undefined,
+      };
+    },
+    [race.vessels, positionsByMmsi, ownMmsi, ownBoatMetrics],
+  );
+
+  const raceName = race.meta['race_name'] ?? race.meta['name'] ?? null;
 
   const toggleHidden = (mmsi: string) => {
     setHidden((prev) => {
@@ -242,12 +319,23 @@ function ReadyApp({
             nowMs={clock.nowMs}
             trailSeconds={trailSeconds}
             hidden={hidden}
+            onMapReady={handleMapReady}
           />
+          {exportToast && (
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit max-w-[80%] rounded bg-slate-800/95 px-4 py-2 text-sm text-emerald-200 shadow-lg"
+              data-testid="export-toast"
+              role="status"
+            >
+              {exportToast}
+            </div>
+          )}
         </div>
         <AnalyticsPanel
           open={panelOpen}
           onToggle={() => setPanelOpen((v) => !v)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenExport={() => setExportOpen(true)}
         >
           <BoatSelector
             vessels={race.vessels}
@@ -309,6 +397,21 @@ function ReadyApp({
           parsedPolar={parsedPolar}
           onPolarChange={onPolarChange}
           onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {exportOpen && (
+        <ExportDialog
+          vessels={race.vessels}
+          hidden={hidden}
+          ownMmsi={ownMmsi}
+          raceName={raceName}
+          startMs={startMs}
+          elapsedMs={clock.nowMs - startMs}
+          mapRef={mapRef}
+          getPositions={getExportBoat}
+          onClose={() => setExportOpen(false)}
+          onToast={(msg) => setExportToast(msg)}
         />
       )}
     </div>

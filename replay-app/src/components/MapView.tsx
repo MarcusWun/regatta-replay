@@ -41,6 +41,11 @@ export interface MapViewProps {
   nowMs: number;
   trailSeconds: number | null;
   hidden: Set<string>;
+  /**
+   * Called once the MapLibre map is ready; receives the live Map instance.
+   * Phase 2c uses this to grab the canvas for PNG export.
+   */
+  onMapReady?: (map: maplibregl.Map) => void;
 }
 
 const BASEMAP_STYLE: maplibregl.StyleSpecification = {
@@ -82,6 +87,7 @@ export function MapView({
   nowMs,
   trailSeconds,
   hidden,
+  onMapReady,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -97,18 +103,23 @@ export function MapView({
       center: [0, 30],
       zoom: 2,
       attributionControl: false,
+      // Required for PNG snapshot export — otherwise WebGL discards the
+      // framebuffer between frames and getCanvas().toBlob() returns a blank
+      // image. MapLibre 6 forwards this to the underlying WebGL context.
+      canvasContextAttributes: { preserveDrawingBuffer: true },
     });
     mapRef.current = map;
     const overlay = new MapboxOverlay({ layers: [] });
     map.addControl(overlay as unknown as maplibregl.IControl);
     overlayRef.current = overlay;
+    onMapReady?.(map);
     return () => {
       overlay.finalize();
       map.remove();
       mapRef.current = null;
       overlayRef.current = null;
     };
-  }, []);
+  }, [onMapReady]);
 
   // Fit to marks on first render that has marks.
   useEffect(() => {
