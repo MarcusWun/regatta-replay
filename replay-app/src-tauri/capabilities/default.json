@@ -18,6 +18,13 @@
       "allow": [{ "sqlite": "sqlite:*" }]
     },
     "sql:allow-select",
-    "sql:allow-close"
+    "sql:allow-close",
+    "store:default",
+    "store:allow-get",
+    "store:allow-set",
+    "store:allow-save",
+    "store:allow-load",
+    "store:allow-delete",
+    "store:allow-has"
   ]
 }

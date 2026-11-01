@@ -6,6 +6,7 @@ import type {
   RaceMarkRow,
   RaceMeta,
   VesselRow,
+  WindRow,
 } from './types';
 
 export interface LoadedRace {
@@ -13,6 +14,8 @@ export interface LoadedRace {
   vessels: VesselRow[];
   positions: PositionRow[];
   marks: RaceMarkRow[];
+  wind: WindRow[];
+  hasWindTable: boolean;
 }
 
 /**
@@ -48,7 +51,23 @@ export async function loadRaceDb(path: string): Promise<LoadedRace> {
          ORDER BY seq`,
     )) ?? [];
 
-    return { meta, vessels, positions, marks };
+    // Phase 2b: wind table is optional. Historical race.db files (pre
+    // Aeolus Phase 1.2) have no `wind` table — probe sqlite_master first
+    // so a missing table doesn't crash the loader.
+    const windTableRows = (await db.select<{ name: string }[]>(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'wind'`,
+    )) ?? [];
+    const hasWindTable = windTableRows.length > 0;
+
+    const wind: WindRow[] = hasWindTable
+      ? ((await db.select<WindRow[]>(
+          `SELECT timestamp_utc, tws, twd, aws, awa, source
+             FROM wind
+             ORDER BY timestamp_utc`,
+        )) ?? [])
+      : [];
+
+    return { meta, vessels, positions, marks, wind, hasWindTable };
   } finally {
     try {
       await db.close();

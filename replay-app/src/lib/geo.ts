@@ -226,6 +226,72 @@ export function interpolateCurrent(
 }
 
 /**
+ * Phase 2b — generalised rounding detection for any waypoint pair (N, N+1).
+ *
+ * A "rounding" at waypoint N is a crossing of the perpendicular through
+ * waypoint N (perpendicular to the N→N+1 direction) where the boat goes
+ * from the pre-rounding side (negative dot product with the N→N+1 vector)
+ * to the post-rounding side (positive). Returns the FIRST crossing per
+ * boat per waypoint — a boat that doubles back and re-crosses later only
+ * registers the first time, matching the way race officials score marks.
+ *
+ * Positions MUST be sorted by timestamp_utc ascending. The returned
+ * timestamp is the later of the bracketing pair (the post-crossing fix).
+ */
+export function detectRounding(
+  waypointN: LatLon,
+  waypointNext: LatLon,
+  positions: { timestamp_utc: string; lat: number; lon: number }[],
+): string | null {
+  if (positions.length < 2) return null;
+
+  let prevSide = sideSign(waypointN, waypointNext, positions[0]);
+  for (let i = 1; i < positions.length; i++) {
+    const curr = positions[i];
+    const currSide = sideSign(waypointN, waypointNext, curr);
+    if (prevSide < 0 && currSide >= 0) {
+      return curr.timestamp_utc;
+    }
+    prevSide = currSide;
+  }
+  return null;
+}
+
+/**
+ * Along-course distance (metres) from a boat position to the next
+ * unrounded waypoint, projected onto the N→N+1 line.
+ *
+ * The projection is the dot product of the boat→N vector with the unit
+ * (N→N+1) vector. Positive distance = boat is still short of waypoint N;
+ * negative = boat has passed through the perpendicular (treated as 0 by
+ * callers once rounding is detected).
+ *
+ * Near-mark snap: if the raw perpendicular distance from boat to waypoint
+ * N is under `snapRadiusM` (default 50 m per PRD §6), returns 0.
+ */
+export function alongCourseDistance(
+  boat: LatLon,
+  waypointN: LatLon,
+  waypointNext: LatLon,
+  snapRadiusM = 50,
+): number {
+  const nextProj = localProject(waypointN, waypointNext);
+  const nextLen = Math.hypot(nextProj.x, nextProj.y);
+  if (nextLen < 1e-6) return 0;
+
+  const boatProj = localProject(waypointN, boat);
+  const boatDist = Math.hypot(boatProj.x, boatProj.y);
+  if (boatDist < snapRadiusM) return 0;
+
+  // Signed distance along N→N+1, measured from the boat toward N.
+  // (boat is at origin − N; project onto unit (N→N+1) and flip sign so
+  // "approaching N" is positive.)
+  const nx = nextProj.x / nextLen;
+  const ny = nextProj.y / nextLen;
+  return -(boatProj.x * nx + boatProj.y * ny);
+}
+
+/**
  * Bounding box of a set of marks with a padding ratio (0.10 = +10 %).
  * Returns [minLon, minLat, maxLon, maxLat] for MapLibre fitBounds.
  */
