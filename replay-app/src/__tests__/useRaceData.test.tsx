@@ -27,6 +27,8 @@ vi.mock('@tauri-apps/plugin-sql', () => {
       }
       if (sql.includes('FROM positions')) return [] as unknown as T;
       if (sql.includes('FROM race_marks')) return [] as unknown as T;
+      if (sql.includes('sqlite_master')) return [] as unknown as T;
+      if (sql.includes('FROM wind')) return [] as unknown as T;
       return [] as unknown as T;
     }
     async close() {}

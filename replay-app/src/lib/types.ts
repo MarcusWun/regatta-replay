@@ -42,3 +42,18 @@ export interface LatLon {
   lat: number;
   lon: number;
 }
+
+/**
+ * Aeolus Phase 1.2 own-boat wind row. Written to race.db at ~1 Hz.
+ * Historical race.db files from before Phase 1.2 have no `wind` table —
+ * callers should handle an empty array (and `hasWindTable` from loadRaceDb)
+ * as a graceful-degradation signal, not an error.
+ */
+export interface WindRow {
+  timestamp_utc: string;
+  tws: number | null;
+  twd: number | null;
+  aws: number | null;
+  awa: number | null;
+  source: string | null;
+}

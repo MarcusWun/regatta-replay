@@ -1,0 +1,248 @@
+{
+  "description": "Phase 2b parity gate — identical bytes committed to MarcusWun/regatta-replay (src/lib/polar-engine/parity.fixture.json) and MarcusWun/aeolus (electron/__tests__/parity.fixture.json). Both repos run the fixture through their vendored polar-engine and assert byte-identical outputs.",
+  "anchoredToAeolusSha": "45cb0e88351a6cafc56cf5a863ae540b1933b4a0",
+  "polarEncoding": "base64:expedition",
+  "polar": "IVNGIDMzMDAgU3RyYXRvcyBwYXJpdHkgZml4dHVyZSBwb2xhcgo0ICAwIDAgIDQ2LjExIDMuNjcgIDUyIDMuOTkgIDYwIDQuMzUgIDc1IDQuNjEgIDkwIDQuNTEgIDExMCA0LjIwICAxMzkuNyAzLjMwCjYgIDAgMCAgNDMuMTEgNC45NSAgNTIgNS40OSAgNjAgNS45OCAgNzUgNi4yMCAgOTAgNi4xMCAgMTEwIDUuNjAgIDE0Mi44NSA0Ljg1CjggIDAgMCAgNDEuMDAgNS45MCAgNTIgNi41NSAgNjAgNy4wMiAgNzUgNy4zMCAgOTAgNy4yMCAgMTEwIDYuNzAgIDE0NS4wMCA1LjkwCjEwIDAgMCAgNDAuMDAgNi41NSAgNTIgNy4yMCAgNjAgNy43NSAgNzUgOC4wNSAgOTAgNy45NSAgMTEwIDcuNDAgIDE0OC4wMCA2LjcwCjEyIDAgMCAgMzkuNTAgNy4wNSAgNTIgNy42NSAgNjAgOC4zMCAgNzUgOC42NSAgOTAgOC41NSAgMTEwIDcuOTUgIDE1MC4wMCA3LjMwCjE0IDAgMCAgMzkuMDAgNy4zNSAgNTIgNy45NSAgNjAgOC42NSAgNzUgOS4wNSAgOTAgOC45NSAgMTEwIDguMzAgIDE1Mi4wMCA3Ljc1CjE2IDAgMCAgMzguNTAgNy41NSAgNTIgOC4yMCAgNjAgOC45NSAgNzUgOS4zNSAgOTAgOS4yNSAgMTEwIDguNjAgIDE1NS4wMCA4LjEwCjIwIDAgMCAgMzguMDAgNy44NSAgNTIgOC41NSAgNjAgOS4zNSAgNzUgOS43NSAgOTAgOS43NSAgMTEwIDkuMDUgIDE1OC4wMCA4Ljc1CjI0IDAgMCAgMzguMDAgOC4xMCAgNTIgOC44NSAgNjAgOS43MCAgNzUgMTAuMDUgOTAgMTAuMTUgMTEwIDkuNTAgIDE2MC4wMCA5LjI1Cg==",
+  "cases": [
+    {
+      "label": "close-hauled midwind — linear",
+      "tws": 10,
+      "twa": 42,
+      "sog": 6.6,
+      "method": "linear",
+      "expected": {
+        "target": 6.66,
+        "percent": 99.1,
+        "vmg": 4.9
+      }
+    },
+    {
+      "label": "close-hauled midwind — pchip",
+      "tws": 10,
+      "twa": 42,
+      "sog": 6.6,
+      "method": "pchip",
+      "expected": {
+        "target": 6.66,
+        "percent": 99.1,
+        "vmg": 4.9
+      }
+    },
+    {
+      "label": "close-hauled light — linear",
+      "tws": 6,
+      "twa": 45,
+      "sog": 5,
+      "method": "linear",
+      "expected": {
+        "target": 5.06,
+        "percent": 98.81,
+        "vmg": 3.54
+      }
+    },
+    {
+      "label": "exact row/col TWS=10 TWA=60",
+      "tws": 10,
+      "twa": 60,
+      "sog": 7.75,
+      "method": "linear",
+      "expected": {
+        "target": 7.75,
+        "percent": 100,
+        "vmg": 3.88
+      }
+    },
+    {
+      "label": "TWS between rows — linear",
+      "tws": 9,
+      "twa": 60,
+      "sog": 7,
+      "method": "linear",
+      "expected": {
+        "target": 7.39,
+        "percent": 94.72,
+        "vmg": 3.5
+      }
+    },
+    {
+      "label": "TWS between rows — pchip",
+      "tws": 9,
+      "twa": 60,
+      "sog": 7,
+      "method": "pchip",
+      "expected": {
+        "target": 7.39,
+        "percent": 94.72,
+        "vmg": 3.5
+      }
+    },
+    {
+      "label": "TWA interp 55° at TWS=12",
+      "tws": 12,
+      "twa": 55,
+      "sog": 7.8,
+      "method": "linear",
+      "expected": {
+        "target": 7.89,
+        "percent": 98.86,
+        "vmg": 4.47
+      }
+    },
+    {
+      "label": "TWA interp 65° at TWS=12",
+      "tws": 12,
+      "twa": 65,
+      "sog": 8.4,
+      "method": "linear",
+      "expected": {
+        "target": 8.42,
+        "percent": 99.76,
+        "vmg": 3.55
+      }
+    },
+    {
+      "label": "bilinear TWS=11 TWA=47",
+      "tws": 11,
+      "twa": 47,
+      "sog": 6.8,
+      "method": "linear",
+      "expected": {
+        "target": 7.17,
+        "percent": 94.84,
+        "vmg": 4.64
+      }
+    },
+    {
+      "label": "reach TWS=14 TWA=90",
+      "tws": 14,
+      "twa": 90,
+      "sog": 8.85,
+      "method": "linear",
+      "expected": {
+        "target": 8.95,
+        "percent": 98.88,
+        "vmg": 0
+      }
+    },
+    {
+      "label": "broad reach TWS=16 TWA=110",
+      "tws": 16,
+      "twa": 110,
+      "sog": 8.4,
+      "method": "linear",
+      "expected": {
+        "target": 8.6,
+        "percent": 97.67,
+        "vmg": -2.87
+      }
+    },
+    {
+      "label": "running TWS=20 TWA=150",
+      "tws": 20,
+      "twa": 150,
+      "sog": 8.8,
+      "method": "linear",
+      "expected": {
+        "target": 8.8,
+        "percent": 100,
+        "vmg": -7.62
+      }
+    },
+    {
+      "label": "running pchip TWS=20 TWA=150",
+      "tws": 20,
+      "twa": 150,
+      "sog": 8.8,
+      "method": "pchip",
+      "expected": {
+        "target": 8.8,
+        "percent": 100,
+        "vmg": -7.62
+      }
+    },
+    {
+      "label": "TWS=10 TWA=100 bilinear hint",
+      "tws": 10,
+      "twa": 100,
+      "sog": 7.6,
+      "method": "linear",
+      "expected": {
+        "target": 7.68,
+        "percent": 98.96,
+        "vmg": -1.32
+      }
+    },
+    {
+      "label": "TWS=15 TWA=75 both-interp",
+      "tws": 15,
+      "twa": 75,
+      "sog": 9,
+      "method": "linear",
+      "expected": {
+        "target": 9.2,
+        "percent": 97.83,
+        "vmg": 2.33
+      }
+    },
+    {
+      "label": "TWS=15 TWA=75 pchip",
+      "tws": 15,
+      "twa": 75,
+      "sog": 9,
+      "method": "pchip",
+      "expected": {
+        "target": 9.2,
+        "percent": 97.83,
+        "vmg": 2.33
+      }
+    },
+    {
+      "label": "low-TWS limit TWS=4 TWA=90",
+      "tws": 4,
+      "twa": 90,
+      "sog": 4.3,
+      "method": "linear",
+      "expected": {
+        "target": 4.51,
+        "percent": 95.34,
+        "vmg": 0
+      }
+    },
+    {
+      "label": "high-TWS limit TWS=24 TWA=90",
+      "tws": 24,
+      "twa": 90,
+      "sog": 9.7,
+      "method": "linear",
+      "expected": {
+        "target": 10.15,
+        "percent": 95.57,
+        "vmg": 0
+      }
+    },
+    {
+      "label": "exceeds polar TWS=18 TWA=52",
+      "tws": 18,
+      "twa": 52,
+      "sog": 8.95,
+      "method": "linear",
+      "expected": {
+        "target": 8.38,
+        "percent": 106.8,
+        "vmg": 5.51
+      }
+    },
+    {
+      "label": "below polar TWS=18 TWA=52 pchip",
+      "tws": 18,
+      "twa": 52,
+      "sog": 8,
+      "method": "pchip",
+      "expected": {
+        "target": 8.38,
+        "percent": 95.47,
+        "vmg": 4.93
+      }
+    }
+  ]
+}
